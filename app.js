@@ -36,8 +36,6 @@ if (!config.SERVER_URL) { //used for ink to static files
 	throw new Error('missing SERVER_URL');
 }
 
-
-
 app.set('port', (process.env.PORT || 5000))
 
 //verify request came from facebook
@@ -56,14 +54,9 @@ app.use(bodyParser.urlencoded({
 // Process application/json
 app.use(bodyParser.json());
 
-
-
-
-
-
 const credentials = {
-    client_email: config.GOOGLE_CLIENT_EMAIL,
-    private_key: config.GOOGLE_PRIVATE_KEY,
+	client_email: config.GOOGLE_CLIENT_EMAIL,
+	private_key: config.GOOGLE_PRIVATE_KEY,
 };
 
 const sessionClient = new dialogflow.SessionsClient(
@@ -72,7 +65,6 @@ const sessionClient = new dialogflow.SessionsClient(
 		credentials
 	}
 );
-
 
 const sessionIds = new Map();
 
@@ -95,15 +87,13 @@ app.get('/webhook/', function (req, res) {
 /*
  * All callbacks for Messenger are POST-ed. They will be sent to the same
  * webhook. Be sure to subscribe your app to your page to receive callbacks
- * for your page. 
+ * for your page.
  * https://developers.facebook.com/docs/messenger-platform/product-overview/setup#subscribe_app
  *
  */
 app.post('/webhook/', function (req, res) {
 	var data = req.body;
 	console.log(JSON.stringify(data));
-
-
 
 	// Make sure this is a page subscription
 	if (data.object == 'page') {
@@ -186,7 +176,7 @@ function receivedMessage(event) {
 
 function handleMessageAttachments(messageAttachments, senderID){
 	//for now just reply
-	sendTextMessage(senderID, "Attachment received. Thank you.");	
+	sendTextMessage(senderID, "Attachment received. Thank you.");
 }
 
 function handleQuickReply(senderID, quickReply, messageId) {
@@ -206,36 +196,36 @@ function handleDialogFlowAction(sender, action, messages, contexts, parameters) 
 	switch (action) {
 		default:
 			//unhandled action, just send back the text
-            handleMessages(messages, sender);
+			handleMessages(messages, sender);
 	}
 }
 
 function handleMessage(message, sender) {
-    switch (message.message) {
-        case "text": //text
-            message.text.text.forEach((text) => {
-                if (text !== '') {
-                    sendTextMessage(sender, text);
-                }
-            });
-            break;
-        case "quickReplies": //quick replies
-            let replies = [];
-            message.quickReplies.quickReplies.forEach((text) => {
-                let reply =
-                    {
-                        "content_type": "text",
-                        "title": text,
-                        "payload": text
-                    }
-                replies.push(reply);
-            });
-            sendQuickReply(sender, message.quickReplies.title, replies);
-            break;
-        case "image": //image
-            sendImageMessage(sender, message.image.imageUri);
-            break;
-    }
+	switch (message.message) {
+		case "text": //text
+			message.text.text.forEach((text) => {
+				if (text !== '') {
+					sendTextMessage(sender, text);
+				}
+			});
+			break;
+		case "quickReplies": //quick replies
+			let replies = [];
+			message.quickReplies.quickReplies.forEach((text) => {
+				let reply =
+					{
+						"content_type": "text",
+						"title": text,
+						"payload": text
+					}
+				replies.push(reply);
+			});
+			sendQuickReply(sender, message.quickReplies.title, replies);
+			break;
+		case "image": //image
+			sendImageMessage(sender, message.image.imageUri);
+			break;
+	}
 }
 
 
@@ -245,30 +235,30 @@ function handleCardMessages(messages, sender) {
 	for (var m = 0; m < messages.length; m++) {
 		let message = messages[m];
 		let buttons = [];
-        for (var b = 0; b < message.card.buttons.length; b++) {
-            let isLink = (message.card.buttons[b].postback.substring(0, 4) === 'http');
-            let button;
-            if (isLink) {
-                button = {
-                    "type": "web_url",
-                    "title": message.card.buttons[b].text,
-                    "url": message.card.buttons[b].postback
-                }
-            } else {
-                button = {
-                    "type": "postback",
-                    "title": message.card.buttons[b].text,
-                    "payload": message.card.buttons[b].postback
-                }
-            }
-            buttons.push(button);
-        }
+		for (var b = 0; b < message.card.buttons.length; b++) {
+			let isLink = (message.card.buttons[b].postback.substring(0, 4) === 'http');
+			let button;
+			if (isLink) {
+				button = {
+					"type": "web_url",
+					"title": message.card.buttons[b].text,
+					"url": message.card.buttons[b].postback
+				}
+			} else {
+				button = {
+					"type": "postback",
+					"title": message.card.buttons[b].text,
+					"payload": message.card.buttons[b].postback
+				}
+			}
+			buttons.push(button);
+		}
 
 
 		let element = {
-            "title": message.card.title,
-            "image_url":message.card.imageUri,
-            "subtitle": message.card.subtitle,
+			"title": message.card.title,
+			"image_url":message.card.imageUri,
+			"subtitle": message.card.subtitle,
 			"buttons": buttons
 		};
 		elements.push(element);
@@ -278,50 +268,50 @@ function handleCardMessages(messages, sender) {
 
 
 function handleMessages(messages, sender) {
-    let timeoutInterval = 1100;
-    let previousType ;
-    let cardTypes = [];
-    let timeout = 0;
-    for (var i = 0; i < messages.length; i++) {
+	let timeoutInterval = 1100;
+	let previousType ;
+	let cardTypes = [];
+	let timeout = 0;
+	for (var i = 0; i < messages.length; i++) {
 
-        if ( previousType == "card" && (messages[i].message != "card" || i == messages.length - 1)) {
-            timeout = (i - 1) * timeoutInterval;
-            setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
-            cardTypes = [];
-            timeout = i * timeoutInterval;
-            setTimeout(handleMessage.bind(null, messages[i], sender), timeout);
-        } else if ( messages[i].message == "card" && i == messages.length - 1) {
-            cardTypes.push(messages[i]);
-            timeout = (i - 1) * timeoutInterval;
-            setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
-            cardTypes = [];
-        } else if ( messages[i].message == "card") {
-            cardTypes.push(messages[i]);
-        } else  {
+		if ( previousType == "card" && (messages[i].message != "card" || i == messages.length - 1)) {
+			timeout = (i - 1) * timeoutInterval;
+			setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
+			cardTypes = [];
+			timeout = i * timeoutInterval;
+			setTimeout(handleMessage.bind(null, messages[i], sender), timeout);
+		} else if ( messages[i].message == "card" && i == messages.length - 1) {
+			cardTypes.push(messages[i]);
+			timeout = (i - 1) * timeoutInterval;
+			setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
+			cardTypes = [];
+		} else if ( messages[i].message == "card") {
+			cardTypes.push(messages[i]);
+		} else  {
 
-            timeout = i * timeoutInterval;
-            setTimeout(handleMessage.bind(null, messages[i], sender), timeout);
-        }
+			timeout = i * timeoutInterval;
+			setTimeout(handleMessage.bind(null, messages[i], sender), timeout);
+		}
 
-        previousType = messages[i].message;
+		previousType = messages[i].message;
 
-    }
+	}
 }
 
 function handleDialogFlowResponse(sender, response) {
-    let responseText = response.fulfillmentMessages.fulfillmentText;
+	let responseText = response.fulfillmentMessages.fulfillmentText;
 
-    let messages = response.fulfillmentMessages;
-    let action = response.action;
-    let contexts = response.outputContexts;
-    let parameters = response.parameters;
+	let messages = response.fulfillmentMessages;
+	let action = response.action;
+	let contexts = response.outputContexts;
+	let parameters = response.parameters;
 
 	sendTypingOff(sender);
 
-    if (isDefined(action)) {
-        handleDialogFlowAction(sender, action, messages, contexts, parameters);
-    } else if (isDefined(messages)) {
-        handleMessages(messages, sender);
+	if (isDefined(action)) {
+		handleDialogFlowAction(sender, action, messages, contexts, parameters);
+	} else if (isDefined(messages)) {
+		handleMessages(messages, sender);
 	} else if (responseText == '' && !isDefined(action)) {
 		//dialogflow could not evaluate input.
 		sendTextMessage(sender, "I'm not sure what you want. Can you be more specific?");
@@ -332,36 +322,36 @@ function handleDialogFlowResponse(sender, response) {
 
 async function sendToDialogFlow(sender, textString, params) {
 
-    sendTypingOn(sender);
+	sendTypingOn(sender);
 
-    try {
-        const sessionPath = sessionClient.sessionPath(
-            config.GOOGLE_PROJECT_ID,
-            sessionIds.get(sender)
-        );
+	try {
+		const sessionPath = sessionClient.sessionPath(
+			config.GOOGLE_PROJECT_ID,
+			sessionIds.get(sender)
+		);
 
-        const request = {
-            session: sessionPath,
-            queryInput: {
-                text: {
-                    text: textString,
-                    languageCode: config.DF_LANGUAGE_CODE,
-                },
-            },
-            queryParams: {
-                payload: {
-                    data: params
-                }
-            }
-        };
-        const responses = await sessionClient.detectIntent(request);
+		const request = {
+			session: sessionPath,
+			queryInput: {
+				text: {
+					text: textString,
+					languageCode: config.DF_LANGUAGE_CODE,
+				},
+			},
+			queryParams: {
+				payload: {
+					data: params
+				}
+			}
+		};
+		const responses = await sessionClient.detectIntent(request);
 
-        const result = responses[0].queryResult;
-        handleDialogFlowResponse(sender, result);
-    } catch (e) {
-        console.log('error');
-        console.log(e);
-    }
+		const result = responses[0].queryResult;
+		handleDialogFlowResponse(sender, result);
+	} catch (e) {
+		console.log('error');
+		console.log(e);
+	}
 
 }
 
@@ -655,7 +645,7 @@ function sendAccountLinking(recipientId) {
 					buttons: [{
 						type: "account_link",
 						url: config.SERVER_URL + "/authorize"
-          }]
+		  }]
 				}
 			}
 		}
@@ -695,8 +685,8 @@ function greetUserText(userId) {
 }
 
 /*
- * Call the Send API. The message data goes in the body. If successful, we'll 
- * get the message id in a response 
+ * Call the Send API. The message data goes in the body. If successful, we'll
+ * get the message id in a response
  *
  */
 function callSendAPI(messageData) {
@@ -731,17 +721,17 @@ function callSendAPI(messageData) {
 /*
  * Postback Event
  *
- * This event is called when a postback is tapped on a Structured Message. 
+ * This event is called when a postback is tapped on a Structured Message.
  * https://developers.facebook.com/docs/messenger-platform/webhook-reference/postback-received
- * 
+ *
  */
 function receivedPostback(event) {
 	var senderID = event.sender.id;
 	var recipientID = event.recipient.id;
 	var timeOfPostback = event.timestamp;
 
-	// The 'payload' param is a developer-defined field which is set in a postback 
-	// button for Structured Messages. 
+	// The 'payload' param is a developer-defined field which is set in a postback
+	// button for Structured Messages.
 	var payload = event.postback.payload;
 
 	switch (payload) {
@@ -757,13 +747,12 @@ function receivedPostback(event) {
 
 }
 
-
 /*
  * Message Read Event
  *
  * This event is called when a previously-sent message has been read.
  * https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-read
- * 
+ *
  */
 function receivedMessageRead(event) {
 	var senderID = event.sender.id;
@@ -783,7 +772,7 @@ function receivedMessageRead(event) {
  * This event is called when the Link Account or UnLink Account action has been
  * tapped.
  * https://developers.facebook.com/docs/messenger-platform/webhook-reference/account-linking
- * 
+ *
  */
 function receivedAccountLink(event) {
 	var senderID = event.sender.id;
@@ -799,7 +788,7 @@ function receivedAccountLink(event) {
 /*
  * Delivery Confirmation Event
  *
- * This event is sent to confirm the delivery of a message. Read more about 
+ * This event is sent to confirm the delivery of a message. Read more about
  * these fields at https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-delivered
  *
  */
@@ -824,8 +813,8 @@ function receivedDeliveryConfirmation(event) {
 /*
  * Authorization Event
  *
- * The value for 'optin.ref' is defined in the entry point. For the "Send to 
- * Messenger" plugin, it is the 'data-ref' field. Read more at 
+ * The value for 'optin.ref' is defined in the entry point. For the "Send to
+ * Messenger" plugin, it is the 'data-ref' field. Read more at
  * https://developers.facebook.com/docs/messenger-platform/webhook-reference/authentication
  *
  */
@@ -835,9 +824,9 @@ function receivedAuthentication(event) {
 	var timeOfAuth = event.timestamp;
 
 	// The 'ref' field is set in the 'Send to Messenger' plugin, in the 'data-ref'
-	// The developer can set this to an arbitrary value to associate the 
+	// The developer can set this to an arbitrary value to associate the
 	// authentication callback with the 'Send to Messenger' click event. This is
-	// a way to do account linking when the user clicks the 'Send to Messenger' 
+	// a way to do account linking when the user clicks the 'Send to Messenger'
 	// plugin.
 	var passThroughParam = event.optin.ref;
 
@@ -851,8 +840,8 @@ function receivedAuthentication(event) {
 }
 
 /*
- * Verify that the callback came from Facebook. Using the App Secret from 
- * the App Dashboard, we can verify the signature that is sent with each 
+ * Verify that the callback came from Facebook. Using the App Secret from
+ * the App Dashboard, we can verify the signature that is sent with each
  * callback in the x-hub-signature field, located in the header.
  *
  * https://developers.facebook.com/docs/graph-api/webhooks#setup
