@@ -199,32 +199,59 @@ function handleEcho(messageId, appId, metadata) {
 
 function handleDialogFlowAction(sender, action, messages, contexts, parameters) {
 	switch (action) {
+
+		case "faq-delivery":
+			 handleMessages(messages, sender);
+			 sendTypingOn(sender);
+			 //ask what user wants to do next
+			setTimeout(function() {
+				let buttons = [
+					{
+						type:"web_url",
+						url:"https://www.myapple.com/track_order",
+						title:"Track my order"
+					},
+					{
+						type:"phone_number",
+						title:"Call us",
+						payload:"+16505551234",
+					},
+					{
+						type:"postback",
+						title:"Keep on Chatting",
+						payload:"CHAT"
+					}
+				];
+				 sendButtonMessage(sender, "What would you like to do next?", buttons);
+			}, 3000)
+			 break;
+
 		case "detailed-application":
-            if (isDefined(contexts[0]) &&
-                (contexts[0].name.includes('job_application') || contexts[0].name.includes('job-application-details_dialog_context'))
-                && contexts[0].parameters) {
-                let phone_number = (isDefined(contexts[0].parameters.fields['phone-number'])
-                    && contexts[0].parameters.fields['phone-number'] != '') ? contexts[0].parameters.fields['phone-number'].stringValue : '';
-                let user_name = (isDefined(contexts[0].parameters.fields['user-name'])
-                    && contexts[0].parameters.fields['user-name'] != '') ? contexts[0].parameters.fields['user-name'].stringValue : '';
-                let previous_job = (isDefined(contexts[0].parameters.fields['previous-job'])
-                    && contexts[0].parameters.fields['previous-job'] != '') ? contexts[0].parameters.fields['previous-job'].stringValue : '';
-                let years_of_experience = (isDefined(contexts[0].parameters.fields['years-of-experience'])
-                    && contexts[0].parameters.fields['years-of-experience'] != '') ? contexts[0].parameters.fields['years-of-experience'].stringValue : '';
-                let job_vacancy = (isDefined(contexts[0].parameters.fields['job-vacancy'])
-                    && contexts[0].parameters.fields['job-vacancy'] != '') ? contexts[0].parameters.fields['job-vacancy'].stringValue : '';
-                if (phone_number != '' && user_name != '' && previous_job != '' && years_of_experience != ''
-                    && job_vacancy != '') {
-                     let emailContent = 'A new job enquiery from ' + user_name + ' for the job: ' + job_vacancy +
-                        '.<br> Previous job position: ' + previous_job + '.' +
-                        '.<br> Years of experience: ' + years_of_experience + '.' +
-                        '.<br> Phone number: ' + phone_number + '.';
-                     sendEmail('New job application', emailContent);
-                     handleMessages(messages, sender);
-                } else {
-                    handleMessages(messages, sender);
-                }
-            }
+			if (isDefined(contexts[0]) &&
+				(contexts[0].name.includes('job_application') || contexts[0].name.includes('job-application-details_dialog_context'))
+				&& contexts[0].parameters) {
+				let phone_number = (isDefined(contexts[0].parameters.fields['phone-number'])
+					&& contexts[0].parameters.fields['phone-number'] != '') ? contexts[0].parameters.fields['phone-number'].stringValue : '';
+				let user_name = (isDefined(contexts[0].parameters.fields['user-name'])
+					&& contexts[0].parameters.fields['user-name'] != '') ? contexts[0].parameters.fields['user-name'].stringValue : '';
+				let previous_job = (isDefined(contexts[0].parameters.fields['previous-job'])
+					&& contexts[0].parameters.fields['previous-job'] != '') ? contexts[0].parameters.fields['previous-job'].stringValue : '';
+				let years_of_experience = (isDefined(contexts[0].parameters.fields['years-of-experience'])
+					&& contexts[0].parameters.fields['years-of-experience'] != '') ? contexts[0].parameters.fields['years-of-experience'].stringValue : '';
+				let job_vacancy = (isDefined(contexts[0].parameters.fields['job-vacancy'])
+					&& contexts[0].parameters.fields['job-vacancy'] != '') ? contexts[0].parameters.fields['job-vacancy'].stringValue : '';
+				if (phone_number != '' && user_name != '' && previous_job != '' && years_of_experience != ''
+					&& job_vacancy != '') {
+					 let emailContent = 'A new job enquiery from ' + user_name + ' for the job: ' + job_vacancy +
+						'.<br> Previous job position: ' + previous_job + '.' +
+						'.<br> Years of experience: ' + years_of_experience + '.' +
+						'.<br> Phone number: ' + phone_number + '.';
+					 sendEmail('New job application', emailContent);
+					 handleMessages(messages, sender);
+				} else {
+					handleMessages(messages, sender);
+				}
+			}
 			break;
 		default:
 			//unhandled action, just send back the text
@@ -767,6 +794,9 @@ function receivedPostback(event) {
 	var payload = event.postback.payload;
 
 	switch (payload) {
+		case 'CHAT' :
+			sendTextMessage( senderID, 'Is there anything I can help you with?' );
+			break;
 		default:
 			//unindentified payload
 			sendTextMessage(senderID, "I'm not sure what you want. Can you be more specific?");
