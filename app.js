@@ -56,14 +56,9 @@ app.use(bodyParser.urlencoded({
 // Process application/json
 app.use(bodyParser.json());
 
-
-
-
-
-
 const credentials = {
-    client_email: config.GOOGLE_CLIENT_EMAIL,
-    private_key: config.GOOGLE_PRIVATE_KEY,
+	client_email: config.GOOGLE_CLIENT_EMAIL,
+	private_key: config.GOOGLE_PRIVATE_KEY,
 };
 
 const sessionClient = new dialogflow.SessionsClient(
@@ -206,36 +201,36 @@ function handleDialogFlowAction(sender, action, messages, contexts, parameters) 
 	switch (action) {
 		default:
 			//unhandled action, just send back the text
-            handleMessages(messages, sender);
+			handleMessages(messages, sender);
 	}
 }
 
 function handleMessage(message, sender) {
-    switch (message.message) {
-        case "text": //text
-            message.text.text.forEach((text) => {
-                if (text !== '') {
-                    sendTextMessage(sender, text);
-                }
-            });
-            break;
-        case "quickReplies": //quick replies
-            let replies = [];
-            message.quickReplies.quickReplies.forEach((text) => {
-                let reply =
-                    {
-                        "content_type": "text",
-                        "title": text,
-                        "payload": text
-                    }
-                replies.push(reply);
-            });
-            sendQuickReply(sender, message.quickReplies.title, replies);
-            break;
-        case "image": //image
-            sendImageMessage(sender, message.image.imageUri);
-            break;
-    }
+	switch (message.message) {
+		case "text": //text
+			message.text.text.forEach((text) => {
+				if (text !== '') {
+					sendTextMessage(sender, text);
+				}
+			});
+			break;
+		case "quickReplies": //quick replies
+			let replies = [];
+			message.quickReplies.quickReplies.forEach((text) => {
+				let reply =
+					{
+						"content_type": "text",
+						"title": text,
+						"payload": text
+					}
+				replies.push(reply);
+			});
+			sendQuickReply(sender, message.quickReplies.title, replies);
+			break;
+		case "image": //image
+			sendImageMessage(sender, message.image.imageUri);
+			break;
+	}
 }
 
 
@@ -245,30 +240,30 @@ function handleCardMessages(messages, sender) {
 	for (var m = 0; m < messages.length; m++) {
 		let message = messages[m];
 		let buttons = [];
-        for (var b = 0; b < message.card.buttons.length; b++) {
-            let isLink = (message.card.buttons[b].postback.substring(0, 4) === 'http');
-            let button;
-            if (isLink) {
-                button = {
-                    "type": "web_url",
-                    "title": message.card.buttons[b].text,
-                    "url": message.card.buttons[b].postback
-                }
-            } else {
-                button = {
-                    "type": "postback",
-                    "title": message.card.buttons[b].text,
-                    "payload": message.card.buttons[b].postback
-                }
-            }
-            buttons.push(button);
-        }
+		for (var b = 0; b < message.card.buttons.length; b++) {
+			let isLink = (message.card.buttons[b].postback.substring(0, 4) === 'http');
+			let button;
+			if (isLink) {
+				button = {
+					"type": "web_url",
+					"title": message.card.buttons[b].text,
+					"url": message.card.buttons[b].postback
+				}
+			} else {
+				button = {
+					"type": "postback",
+					"title": message.card.buttons[b].text,
+					"payload": message.card.buttons[b].postback
+				}
+			}
+			buttons.push(button);
+		}
 
 
 		let element = {
-            "title": message.card.title,
-            "image_url":message.card.imageUri,
-            "subtitle": message.card.subtitle,
+			"title": message.card.title,
+			"image_url":message.card.imageUri,
+			"subtitle": message.card.subtitle,
 			"buttons": buttons
 		};
 		elements.push(element);
@@ -278,50 +273,50 @@ function handleCardMessages(messages, sender) {
 
 
 function handleMessages(messages, sender) {
-    let timeoutInterval = 1100;
-    let previousType ;
-    let cardTypes = [];
-    let timeout = 0;
-    for (var i = 0; i < messages.length; i++) {
+	let timeoutInterval = 1100;
+	let previousType ;
+	let cardTypes = [];
+	let timeout = 0;
+	for (var i = 0; i < messages.length; i++) {
 
-        if ( previousType == "card" && (messages[i].message != "card" || i == messages.length - 1)) {
-            timeout = (i - 1) * timeoutInterval;
-            setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
-            cardTypes = [];
-            timeout = i * timeoutInterval;
-            setTimeout(handleMessage.bind(null, messages[i], sender), timeout);
-        } else if ( messages[i].message == "card" && i == messages.length - 1) {
-            cardTypes.push(messages[i]);
-            timeout = (i - 1) * timeoutInterval;
-            setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
-            cardTypes = [];
-        } else if ( messages[i].message == "card") {
-            cardTypes.push(messages[i]);
-        } else  {
+		if ( previousType == "card" && (messages[i].message != "card" || i == messages.length - 1)) {
+			timeout = (i - 1) * timeoutInterval;
+			setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
+			cardTypes = [];
+			timeout = i * timeoutInterval;
+			setTimeout(handleMessage.bind(null, messages[i], sender), timeout);
+		} else if ( messages[i].message == "card" && i == messages.length - 1) {
+			cardTypes.push(messages[i]);
+			timeout = (i - 1) * timeoutInterval;
+			setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
+			cardTypes = [];
+		} else if ( messages[i].message == "card") {
+			cardTypes.push(messages[i]);
+		} else  {
 
-            timeout = i * timeoutInterval;
-            setTimeout(handleMessage.bind(null, messages[i], sender), timeout);
-        }
+			timeout = i * timeoutInterval;
+			setTimeout(handleMessage.bind(null, messages[i], sender), timeout);
+		}
 
-        previousType = messages[i].message;
+		previousType = messages[i].message;
 
-    }
+	}
 }
 
 function handleDialogFlowResponse(sender, response) {
-    let responseText = response.fulfillmentMessages.fulfillmentText;
+	let responseText = response.fulfillmentMessages.fulfillmentText;
 
-    let messages = response.fulfillmentMessages;
-    let action = response.action;
-    let contexts = response.outputContexts;
-    let parameters = response.parameters;
+	let messages = response.fulfillmentMessages;
+	let action = response.action;
+	let contexts = response.outputContexts;
+	let parameters = response.parameters;
 
 	sendTypingOff(sender);
 
-    if (isDefined(action)) {
-        handleDialogFlowAction(sender, action, messages, contexts, parameters);
-    } else if (isDefined(messages)) {
-        handleMessages(messages, sender);
+	if (isDefined(action)) {
+		handleDialogFlowAction(sender, action, messages, contexts, parameters);
+	} else if (isDefined(messages)) {
+		handleMessages(messages, sender);
 	} else if (responseText == '' && !isDefined(action)) {
 		//dialogflow could not evaluate input.
 		sendTextMessage(sender, "I'm not sure what you want. Can you be more specific?");
@@ -332,36 +327,36 @@ function handleDialogFlowResponse(sender, response) {
 
 async function sendToDialogFlow(sender, textString, params) {
 
-    sendTypingOn(sender);
+	sendTypingOn(sender);
 
-    try {
-        const sessionPath = sessionClient.sessionPath(
-            config.GOOGLE_PROJECT_ID,
-            sessionIds.get(sender)
-        );
+	try {
+		const sessionPath = sessionClient.sessionPath(
+			config.GOOGLE_PROJECT_ID,
+			sessionIds.get(sender)
+		);
 
-        const request = {
-            session: sessionPath,
-            queryInput: {
-                text: {
-                    text: textString,
-                    languageCode: config.DF_LANGUAGE_CODE,
-                },
-            },
-            queryParams: {
-                payload: {
-                    data: params
-                }
-            }
-        };
-        const responses = await sessionClient.detectIntent(request);
+		const request = {
+			session: sessionPath,
+			queryInput: {
+				text: {
+					text: textString,
+					languageCode: config.DF_LANGUAGE_CODE,
+				},
+			},
+			queryParams: {
+				payload: {
+					data: params
+				}
+			}
+		};
+		const responses = await sessionClient.detectIntent(request);
 
-        const result = responses[0].queryResult;
-        handleDialogFlowResponse(sender, result);
-    } catch (e) {
-        console.log('error');
-        console.log(e);
-    }
+		const result = responses[0].queryResult;
+		handleDialogFlowResponse(sender, result);
+	} catch (e) {
+		console.log('error');
+		console.log(e);
+	}
 
 }
 
@@ -655,7 +650,7 @@ function sendAccountLinking(recipientId) {
 					buttons: [{
 						type: "account_link",
 						url: config.SERVER_URL + "/authorize"
-          }]
+		  }]
 				}
 			}
 		}
