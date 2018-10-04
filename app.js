@@ -782,6 +782,8 @@ function greetUserText(userId) {
 						var rows = [];
 						client.query(`SELECT fb_id FROM users WHERE fb_id='${userId}' LIMIT 1`,
 							function(err, result) {
+								console.log(result)
+
 								if (err) {
 									console.log('Query error: ' + err);
 								} else {
