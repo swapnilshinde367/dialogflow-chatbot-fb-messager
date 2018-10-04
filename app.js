@@ -8,7 +8,8 @@ const bodyParser = require('body-parser');
 const request = require('request');
 const app = express();
 const uuid = require('uuid');
-
+const pg = require('pg');
+pg.defaults.ssl = true;
 
 // Messenger API parameters
 if (!config.FB_PAGE_TOKEN) {
@@ -100,8 +101,6 @@ app.get('/webhook/', function (req, res) {
 app.post('/webhook/', function (req, res) {
 	var data = req.body;
 	console.log(JSON.stringify(data));
-
-
 
 	// Make sure this is a page subscription
 	if (data.object == 'page') {
@@ -774,6 +773,36 @@ function greetUserText(userId) {
 			if (user.first_name) {
 				console.log("FB user: %s %s, %s",
 					user.first_name, user.last_name, user.gender);
+
+					var pool = new pg.Pool(config.PG_CONFIG);
+					pool.connect(function(err, client, done) {
+						if (err) {
+							return console.error('Error acquiring client', err.stack);
+						}
+						var rows = [];
+						client.query(`SELECT fb_id FROM users WHERE fb_id='${userId}' LIMIT 1`,
+							function(err, result) {
+								if (err) {
+									console.log('Query error: ' + err);
+								} else {
+									 if (result.rows.length === 0) {
+										let sql = 'INSERT INTO users (fb_id, first_name, last_name, profile_pic, ' +
+											'locale, timezone, gender) VALUES ($1, $2, $3, $4, $5, $6, $7)';
+										client.query(sql,
+											[
+												userId,
+												user.first_name,
+												user.last_name,
+												user.profile_pic,
+												user.locale,
+												user.timezone,
+												user.gender
+											]);
+									}
+								}
+							});
+					 });
+					pool.end();
 
 				sendTextMessage(userId, "Welcome " + user.first_name + '!');
 			} else {
