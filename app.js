@@ -777,8 +777,8 @@ async function greetUserText(userId) {
 		user = usersMap.get(userId);
 	}
 	sendTextMessage(userId, "Welcome " + user.first_name + '! ' +
-		'I can answer frequently asked questions for you ' +
-		'and I perform job interviews. What can I help you with?');
+		'I can answer frequently asked questions for you.' +
+		'What can I help you with?');
 }
 
 /*
