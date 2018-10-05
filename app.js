@@ -209,7 +209,7 @@ function handleEcho(messageId, appId, metadata) {
 function handleDialogFlowAction(sender, action, messages, contexts, parameters) {
 	switch (action) {
 
-		case "iphone_colors.fovourite":
+		case "iphone_colors.favorite":
 			colors.updateUserColor(parameters.fields['color'].stringValue, sender);
 			let reply = `Oh, I like it, too. I'll remember that.`;
 			sendTextMessage(sender, reply);
