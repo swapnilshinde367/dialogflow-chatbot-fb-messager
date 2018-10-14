@@ -209,6 +209,10 @@ function handleEcho(messageId, appId, metadata) {
 function handleDialogFlowAction(sender, action, messages, contexts, parameters) {
 	switch (action) {
 
+		case 'FUN_NEWS':
+			sendFunNewsSubscribe(senderID);
+			break;
+
 		case "buy.iphone":
 			colors.readUserColor(function(color) {
 					let reply;
@@ -1030,6 +1034,24 @@ function sendEmail(subject, content) {
 		console.log(response.body)
 		console.log(response.headers)
 	})
+}
+
+function sendFunNewsSubscribe(userId) {
+	let responceText = "I can send you latest fun technology news, " +
+		"you'll be on top of things and you'll get some laughts. How often would you like to receive them?";
+	 let replies = [
+		{
+			"content_type": "text",
+			"title": "Once per week",
+			"payload": "NEWS_PER_WEEK"
+		},
+		{
+			"content_type": "text",
+			"title": "Once per day",
+			"payload": "NEWS_PER_DAY"
+		}
+	];
+	 fbService.sendQuickReply(userId, responceText, replies);
 }
 
 // Spin up the server
